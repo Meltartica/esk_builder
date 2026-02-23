@@ -19,7 +19,7 @@ KBUILD_BUILD_HOST="esk"
 TIMEZONE="Asia/Ho_Chi_Minh"
 
 # Where release artifacts are published
-RELEASE_REPO="ESK-Project/esk-releases"
+RELEASE_REPO="Meltartica/esk_builder"
 RELEASE_BRANCH="main"
 
 ################################################################################
@@ -40,6 +40,11 @@ ANYKERNEL_REPO="github.com:ESK-Project/AnyKernel3@android12-5.10"
 BUILD_TOOLS_REPO="android.googlesource.com:kernel/prebuilts/build-tools@main-kernel-build-2024"
 MKBOOTIMG_REPO="android.googlesource.com:platform/system/tools/mkbootimg@main-kernel-build-2024"
 SUSFS_REPO="gitlab.com:simonpunk/susfs4ksu@gki-android12-5.10"
+HYMOFS_SETUP_URL="https://raw.githubusercontent.com/Anatdx/HymoFS/main/setup.sh"
+SUKISU_PATCH_REPO="github.com:ShirkNeko/SukiSU_patch@main"
+ZZH_PATCH_REPO="github.com:zzh20188/GKI_KernelSU_SUSFS@main"
+ACTION_BUILD_REPO="github.com:Numbersf/Action-Build@main"
+BBG_SETUP_URL="https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh"
 
 # Other sources
 GKI_URL="https://dl.google.com/android/gki/gki-certified-boot-android12-5.10-2025-09_r1.zip"
@@ -60,5 +65,8 @@ BOOT_SIGN_KEY="$SIGN_KEY/boot_sign_key.pem"
 KERNEL_PATCHES="$WORKSPACE/kernel_patches"
 KERNEL_OUT="$KERNEL/out"
 SUSFS_DIR="$WORKSPACE/susfs"
+SUKISU_PATCH_DIR="$WORKSPACE/SukiSU_patch"
+ZZH_PATCH_DIR="$WORKSPACE/zzh_patch"
+ACTION_BUILD_DIR="$WORKSPACE/Action-Build"
 GITHUB_ENV_FILE="$WORKSPACE/github.env"
 LOGFILE="$WORKSPACE/build.log"

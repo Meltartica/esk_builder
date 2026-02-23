@@ -37,6 +37,9 @@ main() {
 
     # Build package name
     VARIANT="$(is_true "$KSU" && echo "KSU" || echo "VNL")"
+    is_true "$ZRAM" && VARIANT+="-ZRAM"
+    is_true "$BBG" && VARIANT+="-BBG"
+    is_true "$HYMOFS" && VARIANT+="-HYMOFS"
     is_true "$SUSFS" && VARIANT+="-SUSFS"
     is_true "$LXC" && VARIANT+="-LXC"
     PACKAGE_NAME="$KERNEL_NAME-$KERNEL_VERSION-$VARIANT"

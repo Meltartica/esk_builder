@@ -13,8 +13,11 @@ init_build() {
 
     # Kernel flavour
     KSU="$(norm_bool "${KSU:-false}")"
+    HYMOFS="$(norm_bool "${HYMOFS:-false}")"
     SUSFS="$(norm_bool "${SUSFS:-false}")"
     LXC="$(norm_bool "${LXC:-false}")"
+    ZRAM="$(norm_bool "${ZRAM:-${USE_ZRAM:-false}}")"
+    BBG="$(norm_bool "${BBG:-${USE_BBG:-false}}")"
 
     # Make arguments
     MAKE_ARGS=(
@@ -39,7 +42,7 @@ init_build() {
 }
 
 init_logging() {
-    # Clean logfile before writing 
+    # Clean logfile before writing
     : > "$LOGFILE"
 
     exec > >(tee -a "$LOGFILE") 2>&1
@@ -94,7 +97,10 @@ $(tg_run_line)
 
 ⚙️ *Features*
 ├ KernelSU: $(parse_bool "$KSU")
+├ HymoFS: $(parse_bool "$HYMOFS")
 ├ SuSFS: $(parse_bool "$SUSFS")
+├ ZRAM: $(parse_bool "$ZRAM")
+├ BBG: $(parse_bool "$BBG")
 └ LXC: $(parse_bool "$LXC")
 EOF
     )
@@ -111,6 +117,10 @@ prepare_dirs() {
         "$KERNEL" "$BUILD_TOOLS"
         "$MKBOOTIMG" "$SUSFS_DIR"
     )
+
+    if is_true "$ZRAM" || is_true "$BBG"; then
+        src_dir_list+=("$SUKISU_PATCH_DIR" "$ZZH_PATCH_DIR" "$ACTION_BUILD_DIR")
+    fi
 
     info "Resetting output directories: $(printf '%s ' "${out_dir_list[@]##*/}")"
     for dir in "${out_dir_list[@]}"; do
@@ -137,6 +147,13 @@ fetch_sources() {
     info "Cloning build tools..."
     git_clone "$BUILD_TOOLS_REPO" "$BUILD_TOOLS"
     git_clone "$MKBOOTIMG_REPO" "$MKBOOTIMG"
+
+    if is_true "$ZRAM" || is_true "$BBG"; then
+        info "Cloning BBG/ZRAM sources"
+        git_clone "$SUKISU_PATCH_REPO" "$SUKISU_PATCH_DIR"
+        git_clone "$ZZH_PATCH_REPO" "$ZZH_PATCH_DIR"
+        git_clone "$ACTION_BUILD_REPO" "$ACTION_BUILD_DIR"
+    fi
 }
 
 setup_toolchain() {
@@ -216,6 +233,107 @@ apply_susfs() {
     success "SuSFS applied!"
 }
 
+apply_hymofs() {
+    info "Apply HymoFS kernel-side patches"
+
+    curl -fsSL "$HYMOFS_SETUP_URL" | bash -s defconfig "arch/arm64/configs/$KERNEL_DEFCONFIG"
+
+    success "HymoFS applied!"
+}
+
+apply_bbg_setup() {
+    info "Apply Baseband Guard setup"
+
+    curl -fsSL "$BBG_SETUP_URL" | bash
+
+    config --enable CONFIG_BBG
+    _update_lsm_defconfig
+
+    success "Baseband Guard applied!"
+}
+
+_update_lsm_defconfig() {
+    local defconfig_file="$KERNEL/arch/arm64/configs/$KERNEL_DEFCONFIG"
+    local current updated
+
+    current=$(grep -E '^CONFIG_LSM="' "$defconfig_file" | head -n 1 | cut -d'"' -f2)
+    if [[ -z $current ]]; then
+        printf '%s\n' 'CONFIG_LSM="selinux,baseband_guard"' >> "$defconfig_file"
+        return 0
+    fi
+
+    if [[ $current == *baseband_guard* ]]; then
+        return 0
+    fi
+
+    if [[ $current == *selinux* ]]; then
+        updated="${current/selinux/selinux,baseband_guard}"
+    else
+        updated="${current},baseband_guard"
+    fi
+
+    sed -i "s@^CONFIG_LSM=\".*\"@CONFIG_LSM=\"${updated}\"@" "$defconfig_file"
+}
+
+_kernel_src_root() {
+    local root="$KERNEL"
+    [[ -d "$KERNEL/common" ]] && root="$KERNEL/common"
+    printf '%s' "$root"
+}
+
+apply_bbg_patches() {
+    info "Apply BBG patches"
+
+    local kernel_src_root
+    kernel_src_root="$(_kernel_src_root)"
+    pushd "$kernel_src_root" > /dev/null
+
+    local patch
+    patch="$ACTION_BUILD_DIR/patches/optimized_mem_operations.patch"
+    if [[ -f $patch ]]; then
+        patch -p1 --forward < "$patch"
+    else
+        warn "Skip: $patch not found!"
+    fi
+
+    patch="$ACTION_BUILD_DIR/patches/file_struct_8bytes_align.patch"
+    if [[ -f $patch ]]; then
+        patch -p1 --forward < "$patch"
+    else
+        warn "Skip: $patch not found!"
+    fi
+
+    popd > /dev/null
+}
+
+apply_zram_patches() {
+    info "Apply ZRAM/LZ4K patches"
+
+    local kernel_src_root
+    kernel_src_root="$(_kernel_src_root)"
+    pushd "$kernel_src_root" > /dev/null
+
+    cp -R "$SUKISU_PATCH_DIR/other/zram/lz4k/include/linux"/* ./include/linux/
+    cp -R "$SUKISU_PATCH_DIR/other/zram/lz4k/lib"/* ./lib/
+    cp -R "$SUKISU_PATCH_DIR/other/zram/lz4k/crypto"/* ./crypto/
+    cp -R "$SUKISU_PATCH_DIR/other/zram/lz4k_oplus" ./lib/
+
+    rm -f lib/lz4/*
+    mkdir -p lib/lz4
+    cp -R "$ZZH_PATCH_DIR/zram/lz4"/* ./lib/lz4/
+    cp -R "$ZZH_PATCH_DIR/zram/include/linux"/* ./include/linux/
+    cp "$ZZH_PATCH_DIR/zram/$KERNEL_VERSION/lz4_1.10.0.patch" ./
+    patch -p1 -F 3 --fuzz=5 < lz4_1.10.0.patch || true
+
+    cp "$SUKISU_PATCH_DIR/other/zram/zram_patch/$KERNEL_VERSION/lz4kd.patch" ./
+    patch -p1 -F 3 < lz4kd.patch || true
+
+    cp "$SUKISU_PATCH_DIR/other/zram/zram_patch/$KERNEL_VERSION/lz4k_oplus.patch" ./
+    patch -p1 -F 3 < lz4k_oplus.patch || true
+
+    popd > /dev/null
+}
+
 prepare_build() {
     step 8 "Prepare build"
 
@@ -232,11 +350,26 @@ prepare_build() {
         success "KernelSU added"
     fi
 
+    # HymoFS
+    if is_true "$HYMOFS"; then
+        apply_hymofs
+    fi
+
     # SuSFS
     if is_true "$SUSFS"; then
         apply_susfs
     else
         config --disable CONFIG_KSU_SUSFS
+    fi
+
+    if is_true "$ZRAM"; then
+        KERNEL_VERSION=$(awk -F ' = ' '/^VERSION =/{v=$2} /^PATCHLEVEL =/{p=$2} END{print v "." p}' Makefile)
+        apply_zram_patches
+    fi
+
+    if is_true "$BBG"; then
+        apply_bbg_patches
+        apply_bbg_setup
     fi
 
     # LXC
@@ -362,7 +495,10 @@ $(tg_run_line)
 
 📦 *Options*
 ├ KernelSU: $(parse_bool "$KSU")
+├ HymoFS: $(parse_bool "$HYMOFS")
 ├ SuSFS: $(is_true "$SUSFS" && escape_md_v2 "$SUSFS_VERSION" || echo "Disabled")
+├ ZRAM: $(parse_bool "$ZRAM")
+├ BBG: $(parse_bool "$BBG")
 └ LXC: $(parse_bool "$LXC")
 EOF
     )
