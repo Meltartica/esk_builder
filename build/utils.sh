@@ -130,7 +130,7 @@ error() {
         cat << EOF
 ❌ *$(escape_md_v2 "$KERNEL_NAME Kernel CI")*
 
-🏷️ *Tags*: \#$(escape_md_v2 "$BUILD_TAG") \#error
+🏷️ *Tags*: \#generic \#$(escape_md_v2 "$BUILD_TAG") \#error
 $(tg_run_line)
 
 $(escape_md_v2 "ERROR: $*")

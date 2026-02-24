@@ -12,9 +12,6 @@ on:
       SUSFS:
         type: boolean
         required: true
-      LXC:
-        type: boolean
-        required: true
       TG_NOTIFY:
         type: boolean
         required: true
@@ -28,11 +25,6 @@ on:
 
       SUSFS:
         description: "Include SUSFS?"
-        default: false
-        type: boolean
-
-      LXC:
-        description: "Apply LXC patch?"
         default: false
         type: boolean
 
@@ -65,7 +57,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -qq \
-            bc bison ccache curl flex git tar wget aria2 jq zip zstd upx build-essential python3-requests
+            bc bison ccache curl flex git tar wget aria2 jq zip zstd upx lz4 build-essential python3-requests
         
       - name: Prepare ccache
         run: |
@@ -86,17 +78,16 @@ jobs:
         uses: actions/cache/restore@v5.0.3
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ env.clang_hash }}-${{ inputs.KSU }}-${{ inputs.SUSFS }}-${{ inputs.LXC }}-${{ github.ref_name }}-${{ github.sha }}
+          key: ccache-${{ runner.os }}-${{ env.clang_hash }}-${{ inputs.KSU }}-${{ inputs.SUSFS }}-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: |
-            ccache-${{ runner.os }}-${{ env.clang_hash }}-${{ inputs.KSU }}-${{ inputs.SUSFS }}-${{ inputs.LXC }}-${{ github.ref_name }}-
-            ccache-${{ runner.os }}-${{ env.clang_hash }}-${{ inputs.KSU }}-${{ inputs.SUSFS }}-${{ inputs.LXC }}-
+            ccache-${{ runner.os }}-${{ env.clang_hash }}-${{ inputs.KSU }}-${{ inputs.SUSFS }}-${{ github.ref_name }}-
+            ccache-${{ runner.os }}-${{ env.clang_hash }}-${{ inputs.KSU }}-${{ inputs.SUSFS }}-
 
       - name: Build
         id: build
         env:
           KSU: ${{ inputs.KSU }}
           SUSFS: ${{ inputs.SUSFS }}
-          LXC: ${{ inputs.LXC }}
           TG_NOTIFY: ${{ inputs.TG_NOTIFY }}
           SOURCE_DATE_EPOCH: "1704067200"
         run: |
@@ -112,7 +103,7 @@ jobs:
         uses: actions/cache/save@v5.0.3
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ env.clang_hash }}-${{ inputs.KSU }}-${{ inputs.SUSFS }}-${{ inputs.LXC }}-${{ github.ref_name }}-${{ github.sha }}
+          key: ccache-${{ runner.os }}-${{ env.clang_hash }}-${{ inputs.KSU }}-${{ inputs.SUSFS }}-${{ github.ref_name }}-${{ github.sha }}
 
       - name: Upload AnyKernel3 artifact
         uses: actions/upload-artifact@v6
@@ -125,4 +116,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.build.outputs.name }}-${{ steps.build.outputs.variant }}-boot
-          path: ${{ steps.build.outputs.out_dir }}/${{ steps.build.outputs.package_name }}-boot.img
+          path: |
+            ${{ steps.build.outputs.out_dir }}/${{ steps.build.outputs.package_name }}-boot-raw.img
+            ${{ steps.build.outputs.out_dir }}/${{ steps.build.outputs.package_name }}-boot-gz.img
+            ${{ steps.build.outputs.out_dir }}/${{ steps.build.outputs.package_name }}-boot-lz4.img

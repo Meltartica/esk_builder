@@ -19,7 +19,7 @@ KBUILD_BUILD_HOST="esk"
 TIMEZONE="Asia/Ho_Chi_Minh"
 
 # Where release artifacts are published
-RELEASE_REPO="ESK-Project/esk-releases"
+RELEASE_REPO="ESK-Project/gki-releases"
 RELEASE_BRANCH="main"
 
 ################################################################################
@@ -35,8 +35,8 @@ JOBS="${JOBS:-$(nproc --all)}"
 # Source
 ################################################################################
 # Format: <host>:<owner/repo>@<ref>
-KERNEL_REPO="github.com:ESK-Project/android_kernel_xiaomi_mt6895@16"
-ANYKERNEL_REPO="github.com:ESK-Project/AnyKernel3@android12-5.10"
+KERNEL_REPO="github.com:ESK-Project/android12-5.10-gki@main"
+ANYKERNEL_REPO="github.com:ESK-Project/AnyKernel3@gki"
 BUILD_TOOLS_REPO="android.googlesource.com:kernel/prebuilts/build-tools@main-kernel-build-2024"
 MKBOOTIMG_REPO="android.googlesource.com:platform/system/tools/mkbootimg@main-kernel-build-2024"
 SUSFS_REPO="gitlab.com:simonpunk/susfs4ksu@gki-android12-5.10"
@@ -57,7 +57,6 @@ OUT_DIR="$WORKSPACE/out"
 BOOT_IMAGE="$WORKSPACE/boot_image"
 SIGN_KEY="$WORKSPACE/key"
 BOOT_SIGN_KEY="$SIGN_KEY/boot_sign_key.pem"
-KERNEL_PATCHES="$WORKSPACE/kernel_patches"
 KERNEL_OUT="$KERNEL/out"
 SUSFS_DIR="$WORKSPACE/susfs"
 GITHUB_ENV_FILE="$WORKSPACE/github.env"

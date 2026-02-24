@@ -7,7 +7,6 @@
 | ------------- | -------------------------------------- | -------- |
 | KSU           | Include KernelSU                       | bool     |
 | SUSFS         | Include SUSFS                          | bool     |
-| LXC           | Include LXC                            | bool     |
 | JOBS          | Make jobs                              | int      |
 | RESET_SOURCES | Reset source directory (kernel, clang) | bool     |
 | TG_NOTIFY     | Telegram notify                        | bool     |

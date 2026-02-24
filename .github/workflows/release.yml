@@ -17,19 +17,15 @@ jobs:
     strategy:
       matrix:
         variant:
-          - { name: "VNL", KSU: false, SUSFS: false, LXC: false }
-          - { name: "VNL-LXC", KSU: false, SUSFS: false, LXC: true }
-          - { name: "KSU", KSU: true, SUSFS: false, LXC: false }
-          - { name: "KSU-SUSFS", KSU: true, SUSFS: true, LXC: false }
-          - { name: "KSU-LXC", KSU: true, SUSFS: false, LXC: true }
-          - { name: "KSU-SUSFS-LXC", KSU: true, SUSFS: true, LXC: true }
+          - { name: "VNL", KSU: false, SUSFS: false }
+          - { name: "KSU", KSU: true, SUSFS: false }
+          - { name: "KSU-SUSFS", KSU: true, SUSFS: true }
     name: Build ${{ matrix.variant.name }} variant
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
       KSU: ${{ matrix.variant.KSU }}
       SUSFS: ${{ matrix.variant.SUSFS }}
-      LXC: ${{ matrix.variant.LXC }}
       TG_NOTIFY: false
 
   release:
@@ -74,7 +70,7 @@ jobs:
         uses: softprops/action-gh-release@v2.5.0
         with:
           repository: ${{ env.RELEASE_REPO }}
-          name: "${{ env.KERNEL_NAME }} Kernel ${{ env.RELEASE_TAG }}"
+          name: "Generic ESK Kernel ${{ env.RELEASE_TAG }}"
           tag_name: ${{ env.RELEASE_TAG }}
           token: ${{ secrets.GH_TOKEN }}
           body: |
@@ -91,7 +87,6 @@ jobs:
             | **-VNL** | No KernelSU |
             | **-KSU** | KernelSU |
             | **-SUSFS** | SUSFS Support |
-            | **-LXC** | LXC Support |
 
             > [!IMPORTANT]
             > For installation instructions and issue reporting guidelines, please refer to the README.md
