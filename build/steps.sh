@@ -24,10 +24,8 @@ init_build() {
 
     # Environment default setting
     if is_ci; then
-        TG_NOTIFY="$(norm_default "${TG_NOTIFY-}" "true")"
         RESET_SOURCES="$(norm_default "${RESET_SOURCES-}" "true")"
     else
-        TG_NOTIFY="$(norm_default "${TG_NOTIFY-}" "false")"
         RESET_SOURCES="$(norm_default "${RESET_SOURCES-}" "false")"
     fi
 
@@ -58,45 +56,10 @@ validate_env() {
         fi
     fi
 
-    if is_true "$TG_NOTIFY"; then
-        : "${TG_BOT_TOKEN:?Required Telegram Bot Token missing: TG_BOT_TOKEN}"
-        : "${TG_CHAT_ID:?Required chat ID missing: TG_CHAT_ID}"
-    fi
-
-    # Python telegram utils
-    if is_true "$TG_NOTIFY"; then
-        export TG_BOT_TOKEN
-        export TG_CHAT_ID
-    fi
-
     # Config checks
     if is_true "$SUSFS" && ! is_true "$KSU"; then
         error "Cannot use SUSFS without KernelSU"
     fi
-}
-
-send_start_msg() {
-    step 4 "Send start message"
-
-    local start_msg
-    start_msg=$(
-        cat << EOF
-🚧 *$(escape_md_v2 "$KERNEL_NAME Kernel Build Started!")*
-
-🏷️ *Tags*: \#generic \#$(escape_md_v2 "$BUILD_TAG")
-$(tg_run_line)
-
-🧱 *Build Info*
-├ Builder: $(escape_md_v2 "$KBUILD_BUILD_USER@$KBUILD_BUILD_HOST")
-├ Defconfig: $(escape_md_v2 "$KERNEL_DEFCONFIG")
-└ Jobs: $(escape_md_v2 "$JOBS")
-
-⚙️ *Features*
-├ KernelSU: $(parse_bool "$KSU")
-└ SuSFS: $(parse_bool "$SUSFS")
-EOF
-    )
-    telegram_send_msg "$start_msg"
 }
 
 prepare_dirs() {
@@ -356,51 +319,4 @@ out_dir=$OUT_DIR
 release_repo=$RELEASE_REPO
 release_branch=$RELEASE_BRANCH
 EOF
-}
-
-notify_success() {
-    local final_package="$1"
-    local build_time="$2"
-    # For indicating package type (boot image, anykernel3)
-    local additional_tag="$3"
-
-    local minutes=$((build_time / 60))
-    local seconds=$((build_time % 60))
-
-    local result_caption
-    result_caption=$(
-        cat << EOF
-✅ *$(escape_md_v2 "$KERNEL_NAME Build Successfully!")*
-
-🏷️ *Tags*: \#generic \#$(escape_md_v2 "$BUILD_TAG") \#$(escape_md_v2 "$additional_tag")
-$(tg_run_line)
-
-🧱 *Build*
-├ Builder: $(escape_md_v2 "$KBUILD_BUILD_USER@$KBUILD_BUILD_HOST")
-└ Build time: $(escape_md_v2 "${minutes}m ${seconds}s")
-
-🐧 *Kernel*
-├ Linux version: $(escape_md_v2 "$KERNEL_VERSION")
-└ Compiler: $(escape_md_v2 "$COMPILER_STRING")
-
-📦 *Options*
-├ KernelSU: $(parse_bool "$KSU")
-└ SuSFS: $(is_true "$SUSFS" && escape_md_v2 "$SUSFS_VERSION" || echo "Disabled")
-
-📎 *Artifact*
-├ Name: $(escape_md_v2 "$(basename "$final_package")")
-└ Size: $(escape_md_v2 "$(du -h "$final_package" | cut -f1)")
-EOF
-    )
-
-    telegram_upload_file "$final_package" "$result_caption"
-}
-
-telegram_notify() {
-    local build_time="$1"
-    local package_name="$2"
-
-    # AnyKernel3
-    local ak3_package="$OUT_DIR/$package_name-AnyKernel3.zip"
-    notify_success "$ak3_package" "$build_time" "anykernel3"
 }

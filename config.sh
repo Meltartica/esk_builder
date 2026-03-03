@@ -16,11 +16,11 @@ KBUILD_BUILD_USER="builder"
 KBUILD_BUILD_HOST="esk"
 
 # Used for timestamps in logs
-TIMEZONE="Asia/Ho_Chi_Minh"
+TIMEZONE="Asia/Manila"
 
 # Where release artifacts are published
-RELEASE_REPO="ESK-Project/gki-releases"
-RELEASE_BRANCH="main"
+RELEASE_REPO="Meltartica/esk_builder"
+RELEASE_BRANCH="gki"
 
 ################################################################################
 # Build options

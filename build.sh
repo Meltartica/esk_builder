@@ -12,7 +12,6 @@ WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$WORKSPACE/config.sh"
 source "$WORKSPACE/build/utils.sh"
-source "$WORKSPACE/build/telegram.sh"
 source "$WORKSPACE/build/steps.sh"
 
 # Error handling
@@ -28,7 +27,6 @@ main() {
     init_build
     init_logging
     validate_env
-    send_start_msg
     prepare_dirs
     fetch_sources
     setup_toolchain
@@ -50,13 +48,10 @@ main() {
     local build_time="$SECONDS"
 
     step 13 "Finalize build"
-    if is_true "$TG_NOTIFY"; then
-        telegram_notify "$build_time" "$PACKAGE_NAME"
-    else
-        local min=$((build_time / 60))
-        local sec=$((build_time % 60))
-        success "Build success in ${min}m ${sec}s"
-    fi
+
+    local min=$((build_time / 60))
+    local sec=$((build_time % 60))
+    success "Build success in ${min}m ${sec}s"
 }
 
 main "$@"

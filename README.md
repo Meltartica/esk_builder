@@ -9,4 +9,3 @@
 | SUSFS         | Include SUSFS                          | bool     |
 | JOBS          | Make jobs                              | int      |
 | RESET_SOURCES | Reset source directory (kernel, clang) | bool     |
-| TG_NOTIFY     | Telegram notify                        | bool     |
