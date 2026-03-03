@@ -131,12 +131,10 @@ error() {
 ❌ *$(escape_md_v2 "$KERNEL_NAME Kernel CI")*
 
 🏷️ *Tags*: \#$(escape_md_v2 "$BUILD_TAG") \#error
-$(tg_run_line)
 
 $(escape_md_v2 "ERROR: $*")
 EOF
     )
 
-    telegram_upload_file "$LOGFILE" "$msg"
     exit 1
 }

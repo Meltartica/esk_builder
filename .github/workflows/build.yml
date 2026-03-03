@@ -15,9 +15,6 @@ on:
       LXC:
         type: boolean
         required: true
-      TG_NOTIFY:
-        type: boolean
-        required: true
 
   workflow_dispatch:
     inputs:
@@ -36,11 +33,6 @@ on:
         default: false
         type: boolean
 
-      TG_NOTIFY:
-        description: "Telegram Notify"
-        default: true
-        type: boolean
-
 env:
   DEBIAN_FRONTEND: noninteractive
   MAN_DISABLE: true
@@ -51,8 +43,6 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-      TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
@@ -97,7 +87,6 @@ jobs:
           KSU: ${{ inputs.KSU }}
           SUSFS: ${{ inputs.SUSFS }}
           LXC: ${{ inputs.LXC }}
-          TG_NOTIFY: ${{ inputs.TG_NOTIFY }}
           SOURCE_DATE_EPOCH: "1704067200"
         run: |
           chmod +x build.sh
