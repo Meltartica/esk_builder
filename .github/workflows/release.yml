@@ -55,7 +55,7 @@ jobs:
 
       - name: Generate new tag
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           RELEASE_REPO: ${{ env.RELEASE_REPO }}
         run: |
           TAG_PY="$GITHUB_WORKSPACE/py/tag.py"
@@ -71,7 +71,7 @@ jobs:
           repository: ${{ env.RELEASE_REPO }}
           name: "Generic ESK Kernel ${{ env.RELEASE_TAG }}"
           tag_name: ${{ env.RELEASE_TAG }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ github.token }}
           body: |
             ### Key Changes
 
