@@ -36,7 +36,7 @@ init_build() {
 }
 
 init_logging() {
-    # Clean logfile before writing 
+    # Clean logfile before writing
     : > "$LOGFILE"
 
     exec > >(tee -a "$LOGFILE") 2>&1
@@ -188,7 +188,7 @@ prepare_build() {
 
     if is_true "$KSU"; then
         info "Setup KernelSU"
-        install_ksu "ESK-Project/ReSukiSU" "main"
+        install_ksu "ReSukiSU/ReSukiSU" "main"
         config --enable CONFIG_KSU
         success "KernelSU added"
     fi
