@@ -188,7 +188,7 @@ prepare_build() {
 
     if is_true "$KSU"; then
         info "Setup KernelSU"
-        install_ksu "ReSukiSU/ReSukiSU" "main"
+        install_ksu "KOWX712/KernelSU" "staging"
         config --enable CONFIG_KSU
         success "KernelSU added"
     fi
